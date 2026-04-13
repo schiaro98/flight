@@ -1,9 +1,14 @@
 import type { SearchParams, FlightResult } from '../types/flight';
 import { serializeSearchParams } from '../utils/urlSerializer';
-import { parseAmadeusResponse } from '../utils/flightParser';
 
 const FLIGHT_SEARCH_ENDPOINT = '/api/flights';
-const TIMEOUT_MS = 5000;
+const TIMEOUT_MS = 10000;
+
+interface FlightServiceError {
+  error: string;
+  message?: string;
+  airport?: string;
+}
 
 export const flightService = {
   async search(params: SearchParams): Promise<FlightResult[]> {
@@ -17,31 +22,31 @@ export const flightService = {
       const response = await fetch(url, { signal: controller.signal });
 
       if (!response.ok) {
+        const body = (await response.json().catch(() => ({}))) as FlightServiceError;
+        
+        // Special handling for unsupported airports
+        if (body.error === 'UNSUPPORTED_AIRPORT') {
+          const err = new Error(body.message ?? 'Airport not supported');
+          (err as any).code = 'UNSUPPORTED_AIRPORT';
+          (err as any).airport = body.airport;
+          throw err;
+        }
+
         throw new Error(
-          `Flight search failed: HTTP ${response.status} ${response.statusText}`
+          body.message ??
+            `Flight search failed: HTTP ${response.status}`
         );
       }
 
-      const raw: unknown = await response.json();
-      return parseAmadeusResponse(raw);
+      const data: FlightResult[] = await response.json();
+      return data;
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') {
-        const timeoutError = new Error(
-          'Flight search timed out after 5 seconds. Please try again.'
-        );
-        console.error('[flightService] Request timed out:', timeoutError);
-        throw timeoutError;
+        throw new Error('Flight search timed out. Please try again.');
       }
-
       if (error instanceof TypeError) {
-        const networkError = new Error(
-          `Network error during flight search: ${error.message}`
-        );
-        console.error('[flightService] Network error:', networkError);
-        throw networkError;
+        throw new Error(`Network error: ${error.message}`);
       }
-
-      console.error('[flightService] Error:', error);
       throw error;
     } finally {
       clearTimeout(timeoutId);

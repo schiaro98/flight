@@ -35,29 +35,45 @@ A single-page application for searching flights, filtering results, and browsing
 ### Install
 
 ```bash
+# Frontend
 npm install
+
+# Backend
+cd server && npm install
 ```
 
 ### Run in development
 
+In due terminali separati:
+
 ```bash
+# Terminale 1 — backend (porta 3001)
+cd server
+cp .env.example .env   # aggiungi la tua DUFFEL_API_KEY
+npm run dev
+
+# Terminale 2 — frontend (porta 5173)
 npm run dev
 ```
 
-The app will be available at `http://localhost:5173`. API calls are intercepted by MSW and served from `src/services/mockData.ts` — no Amadeus credentials required.
+Il frontend proxerà automaticamente `/api/flights` al backend. Gli aeroporti sono cercati client-side (nessuna chiamata API).
 
-### Build for production
+### Ottenere la Duffel API key
+
+1. Registrati su [app.duffel.com](https://app.duffel.com)
+2. Vai su **Developers → Access tokens**
+3. Crea un token di test (`duffel_test_...`)
+4. Aggiungilo a `server/.env` come `DUFFEL_API_KEY`
+
+### Build per produzione
 
 ```bash
+# Frontend
 npm run build
-npm run preview
+
+# Backend
+cd server && npm run build && npm start
 ```
-
-### Connect to real APIs
-
-Airport search works **offline** — ~8000 airports are bundled directly in the app (`src/services/airportsData.json`), no API calls needed.
-
-For real flight data, create a `.env` file (see `.env.example`) and register at [developers.amadeus.com](https://developers.amadeus.com), then update `src/services/flightService.ts` with your credentials.
 
 ## Testing
 

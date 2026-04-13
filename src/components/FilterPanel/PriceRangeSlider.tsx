@@ -30,7 +30,7 @@ export function PriceRangeSlider({ min, max, value, onChange }: PriceRangeSlider
         <span>{maxVal.toLocaleString('it-IT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })}</span>
       </div>
 
-      <div className="relative h-2">
+      <div className="relative h-2 overflow-hidden rounded-full">
         {/* Track background */}
         <div className="absolute inset-0 rounded-full bg-gray-200" />
         {/* Active range */}
@@ -61,14 +61,16 @@ export function PriceRangeSlider({ min, max, value, onChange }: PriceRangeSlider
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
           style={{ zIndex: 4 }}
         />
+      </div>
 
-        {/* Thumb indicators */}
+      {/* Thumb indicators — outside the overflow-hidden wrapper */}
+      <div className="relative h-0">
         <div
-          className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-blue-500 border-2 border-white shadow pointer-events-none"
+          className="absolute -top-3 w-4 h-4 rounded-full bg-blue-500 border-2 border-white shadow pointer-events-none"
           style={{ left: `calc(${minPercent}% - 8px)` }}
         />
         <div
-          className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-blue-500 border-2 border-white shadow pointer-events-none"
+          className="absolute -top-3 w-4 h-4 rounded-full bg-blue-500 border-2 border-white shadow pointer-events-none"
           style={{ left: `calc(${maxPercent}% - 8px)` }}
         />
       </div>

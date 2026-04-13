@@ -1,9 +1,9 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAirportSearch } from '../../hooks/useAirportSearch';
 import type { Airport } from '../../types/flight';
 
 interface AirportInputProps {
-  value: string;
+  value: string;           // IATA code from the form (e.g. "AOI")
   onChange: (iataCode: string) => void;
   placeholder?: string;
   label?: string;
@@ -11,19 +11,42 @@ interface AirportInputProps {
 }
 
 export function AirportInput({ value, onChange, placeholder, label, error }: AirportInputProps) {
-  const [inputValue, setInputValue] = useState(value);
+  // What the user sees in the text box
+  const [displayValue, setDisplayValue] = useState('');
+  // What we actually search for — only the raw typed text, not the formatted label
+  const [searchQuery, setSearchQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const { airports, isLoading } = useAirportSearch(inputValue);
+  const { airports, isLoading } = useAirportSearch(searchQuery);
+
+  // Sync display when the form value changes externally (e.g. swap button)
+  useEffect(() => {
+    if (!value) {
+      setDisplayValue('');
+      setSearchQuery('');
+    }
+    // If value changed to a different IATA and display doesn't already show it,
+    // just show the IATA code — the user can re-search if they want
+    else if (!displayValue.startsWith(value)) {
+      setDisplayValue(value);
+      setSearchQuery('');
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
+    const text = e.target.value;
+    setDisplayValue(text);
+    setSearchQuery(text);   // only raw typed text goes to search
     setIsOpen(true);
+    if (!text) onChange(''); // clear form value when input is cleared
   };
 
   const handleSelect = (airport: Airport) => {
-    setInputValue(`${airport.iataCode} — ${airport.city}`);
+    const label = `${airport.iataCode} — ${airport.city}`;
+    setDisplayValue(label);
+    setSearchQuery('');     // stop searching after selection
     onChange(airport.iataCode);
     setIsOpen(false);
   };
@@ -34,10 +57,10 @@ export function AirportInput({ value, onChange, placeholder, label, error }: Air
 
   const handleFocus = () => {
     if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-    if (inputValue.length >= 2) setIsOpen(true);
+    if (searchQuery.length >= 2) setIsOpen(true);
   };
 
-  const showDropdown = isOpen && (airports.length > 0 || isLoading);
+  const showDropdown = isOpen && searchQuery.length >= 2 && (airports.length > 0 || isLoading);
 
   return (
     <div className="relative w-full">
@@ -46,11 +69,12 @@ export function AirportInput({ value, onChange, placeholder, label, error }: Air
       )}
       <input
         type="text"
-        value={inputValue}
+        value={displayValue}
         onChange={handleInputChange}
         onBlur={handleBlur}
         onFocus={handleFocus}
         placeholder={placeholder}
+        autoComplete="off"
         className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
           error ? 'border-red-500' : 'border-gray-300'
         }`}

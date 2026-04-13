@@ -32,7 +32,7 @@ export function FilterPanel({ results }: FilterPanelProps) {
     return Array.from(codes).sort();
   }, [results]);
 
-  // Derive price bounds from results
+  // Derive price bounds from results and sync with filter store on first load
   const { priceMin, priceMax } = useMemo(() => {
     if (results.length === 0) return { priceMin: 0, priceMax: 10000 };
     const prices = results.map((r) => parseFloat(r.price.grandTotal));
@@ -41,6 +41,15 @@ export function FilterPanel({ results }: FilterPanelProps) {
       priceMax: Math.ceil(Math.max(...prices)),
     };
   }, [results]);
+
+  // Sync priceRange in store when results change (so filter starts with full range)
+  const prevMaxRef = React.useRef<number | null>(null);
+  React.useEffect(() => {
+    if (results.length > 0 && prevMaxRef.current !== priceMax) {
+      prevMaxRef.current = priceMax;
+      setFilter('priceRange', [priceMin, priceMax]);
+    }
+  }, [priceMin, priceMax, results.length, setFilter]);
 
   // Derive max duration from results (in hours, rounded up)
   const maxDuration = useMemo(() => {
