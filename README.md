@@ -53,16 +53,11 @@ npm run build
 npm run preview
 ```
 
-### Connect to the real Amadeus API
+### Connect to real APIs
 
-Create a `.env` file in the project root:
+Airport search works **offline** — ~8000 airports are bundled directly in the app (`src/services/airportsData.json`), no API calls needed.
 
-```env
-VITE_AMADEUS_CLIENT_ID=your_client_id
-VITE_AMADEUS_CLIENT_SECRET=your_client_secret
-```
-
-Then update `src/services/flightService.ts` and `src/services/airportService.ts` to use the env variables instead of the mock endpoints.
+For real flight data, create a `.env` file (see `.env.example`) and register at [developers.amadeus.com](https://developers.amadeus.com), then update `src/services/flightService.ts` with your credentials.
 
 ## Testing
 

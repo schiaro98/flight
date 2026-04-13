@@ -1,57 +1,35 @@
 import type { Airport } from '../types/flight';
+import airportsRaw from './airportsData.json';
 
-const AIRPORT_SEARCH_ENDPOINT = '/api/airports';
-
-// Amadeus /v1/reference-data/locations response shape
-interface AmadeusLocation {
-  iataCode: string;
+interface RawAirport {
+  iata: string;
   name: string;
-  address: {
-    cityName: string;
-    countryName: string;
-    countryCode: string;
-  };
+  city: string;
+  country: string;
 }
 
-interface AmadeusLocationsResponse {
-  data: AmadeusLocation[];
-}
-
-function mapLocation(loc: AmadeusLocation): Airport {
-  return {
-    iataCode: loc.iataCode,
-    name: loc.name,
-    city: loc.address.cityName,
-    country: loc.address.countryName,
-    countryCode: loc.address.countryCode,
-  };
-}
+// Build a typed array once at module load — no runtime cost on subsequent calls
+const ALL_AIRPORTS: Airport[] = (airportsRaw as RawAirport[]).map((a) => ({
+  iataCode: a.iata,
+  name: a.name,
+  city: a.city,
+  country: a.country,
+  countryCode: '',
+}));
 
 export const airportService = {
-  async search(query: string): Promise<Airport[]> {
-    if (query.length < 2) {
-      return [];
-    }
+  search(query: string): Promise<Airport[]> {
+    if (query.length < 2) return Promise.resolve([]);
 
-    try {
-      const url = `${AIRPORT_SEARCH_ENDPOINT}?keyword=${encodeURIComponent(query)}&subType=AIRPORT`;
-      const response = await fetch(url);
+    const q = query.trim().toLowerCase();
 
-      if (!response.ok) {
-        throw new Error(`Airport search failed: HTTP ${response.status} ${response.statusText}`);
-      }
+    const results = ALL_AIRPORTS.filter(
+      (a) =>
+        a.iataCode.toLowerCase().startsWith(q) ||
+        a.city.toLowerCase().startsWith(q) ||
+        a.name.toLowerCase().includes(q)
+    ).slice(0, 10);
 
-      const raw: unknown = await response.json();
-      const data = raw as AmadeusLocationsResponse;
-
-      if (!data || !Array.isArray(data.data)) {
-        return [];
-      }
-
-      return data.data.map(mapLocation);
-    } catch (error) {
-      console.error('[airportService] Error searching airports:', error);
-      return [];
-    }
+    return Promise.resolve(results);
   },
 };

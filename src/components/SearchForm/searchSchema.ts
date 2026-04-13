@@ -8,10 +8,11 @@ export const searchParamsSchema = z
     destination: z.string().min(1, 'Destination is required'),
     departureDate: z
       .string()
-      .regex(isoDateRegex, 'Departure date must be a valid ISO date (YYYY-MM-DD)'),
+      .min(1, 'Please select a departure date')
+      .regex(isoDateRegex, 'Please select a valid departure date'),
     returnDate: z
       .string()
-      .regex(isoDateRegex, 'Return date must be a valid ISO date (YYYY-MM-DD)')
+      .regex(isoDateRegex, 'Please select a valid return date')
       .optional(),
     tripType: z.enum(['one-way', 'round-trip', 'multi-city']),
     passengers: z.object({
