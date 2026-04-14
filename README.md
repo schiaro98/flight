@@ -77,7 +77,7 @@ cd client && npm start
 ### Build per produzione
 
 ```bash
-cd client-angular && npm run build
+cd client && npm run build
 cd server && npm run build && npm start
 ```
 
