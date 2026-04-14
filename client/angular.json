@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "newProjectRoot": "projects",
+  "projects": {
+    "flight-search-angular": {
+      "projectType": "application",
+      "schematics": {
+        "@schematics/angular:component": {
+          "style": "css",
+          "standalone": true
+        }
+      },
+      "root": "",
+      "sourceRoot": "src",
+      "prefix": "app",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:application",
+          "options": {
+            "outputPath": "dist/flight-search-angular",
+            "index": "src/index.html",
+            "browser": "src/main.ts",
+            "polyfills": ["zone.js"],
+            "tsConfig": "tsconfig.app.json",
+            "assets": ["src/favicon.ico", "src/assets"],
+            "styles": ["src/styles.css"],
+            "scripts": []
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                { "type": "initial", "maximumWarning": "500kB", "maximumError": "1MB" },
+                { "type": "anyComponentStyle", "maximumWarning": "2kB", "maximumError": "4kB" }
+              ],
+              "outputHashing": "all"
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular-devkit/build-angular:dev-server",
+          "configurations": {
+            "production": { "buildTarget": "flight-search-angular:build:production" },
+            "development": { "buildTarget": "flight-search-angular:build:development" }
+          },
+          "defaultConfiguration": "development",
+          "options": {
+            "proxyConfig": "proxy.conf.json"
+          }
+        }
+      }
+    }
+  },
+  "cli": {
+    "analytics": "5bad4540-6cc4-4ae9-b8ac-1ba1beaffef7"
+  }
+}
