@@ -44,7 +44,7 @@ A single-page application for searching flights, filtering results, and browsing
 
 ### Prerequisites
 
-- Node.js ≥ 18
+- Node.js ≥ 22 (LTS)
 - npm ≥ 9
 
 ### Install
