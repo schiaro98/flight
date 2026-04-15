@@ -146,9 +146,10 @@ router.get('/', async (req: Request, res: Response) => {
 
     res.json(results);
   } catch (err) {
-    console.error('[flights] Duffel error:', err);
+    console.error('[flights] Duffel error:', JSON.stringify(err, null, 2));
     const message = err instanceof Error ? err.message : 'Unknown error';
-    res.status(502).json({ error: `Duffel API error: ${message}` });
+    const details = (err as any)?.errors?.[0]?.message ?? '';
+    res.status(502).json({ error: `Duffel API error: ${message}`, details });
   }
 });
 
