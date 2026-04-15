@@ -59,8 +59,8 @@ jobs:
         working-directory: client
 
       - name: Deploy to Vercel
+        # Run from repo root — Vercel uses Root Directory setting from dashboard (client/)
         run: vercel deploy --prod --yes
-        working-directory: client
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
