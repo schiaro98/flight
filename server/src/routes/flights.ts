@@ -63,21 +63,20 @@ router.get('/', async (req: Request, res: Response) => {
   const childrenCount = parseInt(children ?? '0', 10);
   const infantsCount = parseInt(infants ?? '0', 10);
 
-  // Build passengers array for Duffel
-  const passengers: { type?: 'adult'; age?: number }[] = [
-    ...Array(adultsCount).fill({ type: 'adult' as const }),
-    ...Array(childrenCount).fill({ age: 10 }), // children: 2-11
-    ...Array(infantsCount).fill({ age: 1 }),    // infants: <2
+  // Build passengers array for Duffel v4
+  // Adults: { type: 'adult' }, children/infants: { age: number } only
+  const passengers = [
+    ...Array.from({ length: adultsCount }, () => ({ type: 'adult' as const })),
+    ...Array.from({ length: childrenCount }, () => ({ age: 10 })),
+    ...Array.from({ length: infantsCount }, () => ({ age: 1 })),
   ];
 
-  // Build slices
-  const slices: { origin: string; destination: string; departure_date: string }[] = [
-    { origin: originUpper, destination: destUpper, departure_date: dep },
+  const slices = [
+    { origin: originUpper, destination: destUpper, departure_date: dep, arrival_time: null, departure_time: null },
+    ...(type === 'round-trip' && ret
+      ? [{ origin: destUpper, destination: originUpper, departure_date: ret, arrival_time: null, departure_time: null }]
+      : []),
   ];
-
-  if (type === 'round-trip' && ret) {
-    slices.push({ origin: destUpper, destination: originUpper, departure_date: ret });
-  }
 
   // Map cabin class
   const cabinMap: Record<string, string> = {
@@ -142,7 +141,7 @@ router.get('/', async (req: Request, res: Response) => {
       validatingAirlineCodes: [
         offer.slices[0]?.segments[0]?.marketing_carrier.iata_code ?? '',
       ],
-      numberOfBookableSeats: offer.available_services?.length ?? 9,
+      numberOfBookableSeats: 9,
     }));
 
     res.json(results);
