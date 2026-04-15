@@ -3,6 +3,7 @@ import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http'
 import { Observable, throwError } from 'rxjs';
 import { catchError, timeout } from 'rxjs/operators';
 import type { SearchParams, FlightResult } from '../types/flight';
+import { environment } from '../../environments/environment';
 
 const TIMEOUT_MS = 10000;
 
@@ -15,6 +16,7 @@ export interface FlightServiceError {
 @Injectable({ providedIn: 'root' })
 export class FlightService {
   private http = inject(HttpClient);
+  private baseUrl = environment.apiBaseUrl;
 
   search(params: SearchParams): Observable<FlightResult[]> {
     let httpParams = new HttpParams()
@@ -31,7 +33,7 @@ export class FlightService {
       httpParams = httpParams.set('ret', params.returnDate);
     }
 
-    return this.http.get<FlightResult[]>('/api/flights', { params: httpParams }).pipe(
+    return this.http.get<FlightResult[]>(`${this.baseUrl}/api/flights`, { params: httpParams }).pipe(
       timeout(TIMEOUT_MS),
       catchError((err: HttpErrorResponse) => {
         if (err.status === 400 && err.error?.error === 'UNSUPPORTED_AIRPORT') {
