@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiBaseUrl: 'https://your-backend.railway.app',  // sostituisci con l'URL Railway reale
+  apiBaseUrl: 'https://flight-lemon-six.vercel.app/',  // sostituisci con l'URL Railway reale
 };
