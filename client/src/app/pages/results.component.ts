@@ -6,7 +6,7 @@ import { SearchStore } from '../store/search.store';
 import { SearchFormComponent } from '../components/search-form/search-form.component';
 import { FilterPanelComponent } from '../components/filter-panel/filter-panel.component';
 import { FlightResultListComponent } from '../components/flight-results/flight-result-list.component';
-import { LoadingSpinnerComponent } from '../components/common/loading-spinner.component';
+import { PriceCalendarComponent } from '../components/price-calendar/price-calendar.component';
 import { deserializeSearchParams, serializeSearchParams } from '../utils/url-serializer';
 import {
   filterByPrice, filterByStops, filterByAirline,
@@ -25,7 +25,7 @@ const NEARBY_AIRPORTS: Record<string, { code: string; name: string }[]> = {
 @Component({
   selector: 'app-results',
   standalone: true,
-  imports: [CommonModule, SearchFormComponent, FilterPanelComponent, FlightResultListComponent, LoadingSpinnerComponent],
+  imports: [CommonModule, SearchFormComponent, FilterPanelComponent, FlightResultListComponent, PriceCalendarComponent],
   template: `
     <div class="min-h-screen bg-gray-50">
       <header class="bg-blue-700 px-4 py-4">
@@ -47,6 +47,13 @@ const NEARBY_AIRPORTS: Record<string, { code: string; name: string }[]> = {
           <!-- Sidebar -->
           <aside class="w-full md:w-72 md:shrink-0" [class.hidden]="!filterOpen()" [class.md:block]="true">
             <app-filter-panel [results]="results()" />
+            <div class="mt-4">
+              <app-price-calendar
+                [searchParams]="store.searchParams()"
+                [selectedDate]="store.searchParams()?.departureDate ?? ''"
+                (dateSelected)="onCalendarDateSelected($event)"
+              />
+            </div>
           </aside>
 
           <!-- Results -->
@@ -81,7 +88,7 @@ export class ResultsComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private flightService = inject(FlightService);
-  private store = inject(SearchStore);
+  protected store = inject(SearchStore);
 
   results = signal<FlightResult[]>([]);
   isLoading = signal(false);
@@ -137,6 +144,14 @@ export class ResultsComponent implements OnInit {
     const updated = { ...params };
     if (unsupported === params.origin) updated.origin = newCode;
     else if (unsupported === params.destination) updated.destination = newCode;
+    const qs = serializeSearchParams(updated).toString();
+    this.router.navigateByUrl(`/results?${qs}`);
+  }
+
+  onCalendarDateSelected(date: string): void {
+    const params = this.store.searchParams();
+    if (!params) return;
+    const updated = { ...params, departureDate: date };
     const qs = serializeSearchParams(updated).toString();
     this.router.navigateByUrl(`/results?${qs}`);
   }

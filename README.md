@@ -84,3 +84,27 @@ cd server && npm run build && npm start
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+---
+
+## Roadmap / TODO
+
+### Nuove funzionalità
+- [ ] Ricerca per paese come origine/destinazione (es. "Italy" → tutti gli aeroporti italiani)
+- [ ] Destinazione "Ovunque" — mostra le migliori offerte verso qualsiasi destinazione
+- [ ] Ricerca date flessibili / date prossime (±3/7 giorni rispetto alla data selezionata)
+- [ ] Collegare il PriceCalendar alla pagina risultati (già implementato ma non integrato)
+- [ ] Stato vuoto homepage prima di fare una ricerca
+- [ ] Messaggio "nessun risultato con i filtri attivi" con suggerimento di rimuovere i filtri
+
+### Qualità del mock
+- [ ] Arricchire `mockData.ts` con più voli realistici per testare meglio filtri e ordinamento
+
+### Robustezza
+- [ ] Gestione back button del browser tra homepage e risultati
+- [ ] Gestione OAuth2 token refresh per Amadeus (se si vuole aggiungere come fonte alternativa)
+
+### CI/CD
+- [ ] Fixare il deploy automatico Vercel via GitHub Actions (path `client/client` issue)
+- [ ] Fixare il deploy automatico Railway via GitHub Actions (token scaduto)
+

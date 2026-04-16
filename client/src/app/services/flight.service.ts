@@ -34,17 +34,21 @@ export class FlightService {
     }
 
     return this.http.get<FlightResult[]>(`${this.baseUrl}/api/flights`, { params: httpParams }).pipe(
-      timeout(TIMEOUT_MS),
-      catchError((err: HttpErrorResponse) => {
-        if (err.status === 400 && err.error?.error === 'UNSUPPORTED_AIRPORT') {
-          const e = new Error(err.error.message ?? 'Airport not supported') as Error & {
-            code: string; airport: string;
-          };
-          e.code = 'UNSUPPORTED_AIRPORT';
-          e.airport = err.error.airport;
-          return throwError(() => e);
+      timeout({ each: TIMEOUT_MS, with: () => throwError(() => new Error('La ricerca ha impiegato troppo tempo. Riprova.')) }),
+      catchError((err) => {
+        if (err instanceof HttpErrorResponse) {
+          if (err.status === 400 && err.error?.error === 'UNSUPPORTED_AIRPORT') {
+            const e = new Error(err.error.message ?? 'Airport not supported') as Error & {
+              code: string; airport: string;
+            };
+            e.code = 'UNSUPPORTED_AIRPORT';
+            e.airport = err.error.airport;
+            return throwError(() => e);
+          }
+          return throwError(() => new Error(err.error?.message ?? `Errore HTTP ${err.status}`));
         }
-        return throwError(() => new Error(err.error?.message ?? `HTTP ${err.status}`));
+        // TimeoutError or other errors
+        return throwError(() => err instanceof Error ? err : new Error('Errore sconosciuto'));
       })
     );
   }
