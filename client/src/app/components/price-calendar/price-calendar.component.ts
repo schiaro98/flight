@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, signal, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, OnInit, OnDestroy, SimpleChanges, signal, inject, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
@@ -10,30 +10,31 @@ import type { SearchParams, PriceCalendarEntry } from '../../types/flight';
   imports: [CommonModule],
   template: `
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-      <div class="flex items-center justify-between mb-4">
-        <button (click)="prevMonth()" [disabled]="!canGoPrev()"
-          class="p-1 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
-          ‹
+      @if (!isInitialized()) {
+        <button (click)="initializeCalendar()"
+          class="w-full py-3 px-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors">
+          📅 Carica calendario prezzi
         </button>
-        <h3 class="text-sm font-semibold text-gray-700">{{ monthLabel() }}</h3>
-        <button (click)="nextMonth()" [disabled]="!canGoNext()"
-          class="p-1 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
-          ›
-        </button>
-      </div>
-
-      <!-- Day headers -->
-      <div class="grid grid-cols-7 mb-1">
-        @for (d of dayNames; track d) {
-          <div class="text-center text-xs text-gray-400 font-medium py-1">{{ d }}</div>
-        }
-      </div>
-
-      @if (isLoading()) {
-        <div class="flex justify-center py-8">
-          <div class="animate-spin rounded-full h-6 w-6 border-2 border-blue-200 border-t-blue-600"></div>
-        </div>
       } @else {
+        <div class="flex items-center justify-between mb-4">
+          <button (click)="prevMonth()" [disabled]="!canGoPrev()"
+            class="p-1 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+            ‹
+          </button>
+          <h3 class="text-sm font-semibold text-gray-700">{{ monthLabel() }}</h3>
+          <button (click)="nextMonth()" [disabled]="!canGoNext()"
+            class="p-1 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+            ›
+          </button>
+        </div>
+
+        <!-- Day headers -->
+        <div class="grid grid-cols-7 mb-1">
+          @for (d of dayNames; track d) {
+            <div class="text-center text-xs text-gray-400 font-medium py-1">{{ d }}</div>
+          }
+        </div>
+
         <!-- Calendar grid -->
         <div class="grid grid-cols-7 gap-px">
           <!-- Empty cells for first day offset -->
@@ -43,6 +44,7 @@ import type { SearchParams, PriceCalendarEntry } from '../../types/flight';
           @for (entry of entries(); track entry.date) {
             @let isPast = entry.date < today;
             @let isSelected = entry.date === selectedDate;
+            @let isLoadingEntry = isLoading() && entry.minPrice === null && !isPast;
             <button
               (click)="!isPast && entry.minPrice !== null && selectDate(entry.date)"
               [disabled]="isPast || entry.minPrice === null"
@@ -60,26 +62,30 @@ import type { SearchParams, PriceCalendarEntry } from '../../types/flight';
                 <span class="text-[10px] leading-tight">
                   {{ formatPrice(entry.minPrice, entry.currency) }}
                 </span>
+              } @else if (isLoadingEntry) {
+                <span class="text-[10px] text-gray-200 animate-pulse">···</span>
               } @else if (!isPast) {
                 <span class="text-[10px] text-gray-300">—</span>
               }
             </button>
           }
         </div>
-      }
 
-      <p class="mt-3 text-xs text-gray-400 text-center">
-        🟢 Prezzo più basso del mese
-      </p>
+        <p class="mt-3 text-xs text-gray-400 text-center">
+          🟢 Prezzo più basso del mese
+        </p>
+      }
     </div>
   `,
 })
-export class PriceCalendarComponent implements OnChanges {
+export class PriceCalendarComponent implements OnChanges, OnInit, OnDestroy {
   @Input() searchParams: SearchParams | null = null;
   @Input() selectedDate = '';
   @Output() dateSelected = new EventEmitter<string>();
 
   private http = inject(HttpClient);
+  private ngZone = inject(NgZone);
+  private eventSource: EventSource | null = null;
 
   dayNames = ['Lu', 'Ma', 'Me', 'Gi', 'Ve', 'Sa', 'Do'];
   today = new Date().toISOString().split('T')[0];
@@ -88,6 +94,7 @@ export class PriceCalendarComponent implements OnChanges {
   currentMonth = signal(new Date().getMonth() + 1); // 1-based
   entries = signal<PriceCalendarEntry[]>([]);
   isLoading = signal(false);
+  isInitialized = signal(false);
 
   monthLabel = () => {
     const d = new Date(this.currentYear(), this.currentMonth() - 1, 1);
@@ -124,8 +131,26 @@ export class PriceCalendarComponent implements OnChanges {
         this.currentYear.set(d.getFullYear());
         this.currentMonth.set(d.getMonth() + 1);
       }
-      this.loadCalendar();
     }
+  }
+
+  ngOnInit(): void {
+    // Reset calendar when component is initialized
+    this.isInitialized.set(false);
+    this.entries.set([]);
+    this.isLoading.set(false);
+  }
+
+  ngOnDestroy(): void {
+    // Close EventSource when component is destroyed
+    if (this.eventSource) {
+      this.eventSource.close();
+    }
+  }
+
+  initializeCalendar(): void {
+    this.isInitialized.set(true);
+    this.loadCalendar();
   }
 
   prevMonth(): void {
@@ -153,7 +178,20 @@ export class PriceCalendarComponent implements OnChanges {
   loadCalendar(): void {
     if (!this.searchParams) return;
     this.isLoading.set(true);
-    this.entries.set([]);
+
+    // Close previous EventSource if exists
+    if (this.eventSource) {
+      this.eventSource.close();
+    }
+
+    // Initialize calendar with empty entries (placeholders)
+    const daysInMonth = new Date(this.currentYear(), this.currentMonth(), 0).getDate();
+    const placeholders: PriceCalendarEntry[] = [];
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date = `${this.currentYear()}-${String(this.currentMonth()).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      placeholders.push({ date, minPrice: null, currency: 'EUR', isLowest: false });
+    }
+    this.entries.set(placeholders);
 
     const params = new HttpParams()
       .set('origin', this.searchParams.origin)
@@ -163,11 +201,39 @@ export class PriceCalendarComponent implements OnChanges {
       .set('cabin', this.searchParams.cabinClass)
       .set('adults', String(this.searchParams.passengers.adults));
 
-    this.http.get<PriceCalendarEntry[]>(`${environment.apiBaseUrl}/api/price-calendar`, { params })
-      .subscribe({
-        next: (data) => { this.entries.set(data); this.isLoading.set(false); },
-        error: () => { this.isLoading.set(false); },
-      });
+    this.eventSource = new EventSource(
+      `${environment.apiBaseUrl}/api/price-calendar?${params.toString()}`
+    );
+
+    this.eventSource.onmessage = (event) => {
+      const data = event.data;
+      if (data === '[DONE]') {
+        this.eventSource?.close();
+        this.isLoading.set(false);
+        return;
+      }
+
+      try {
+        const entry: PriceCalendarEntry = JSON.parse(data);
+        // Run inside Angular zone to trigger change detection
+        this.ngZone.run(() => {
+          const currentEntries = [...this.entries()];
+          const index = currentEntries.findIndex((e) => e.date === entry.date);
+          if (index !== -1) {
+            currentEntries[index] = entry;
+            this.entries.set(currentEntries);
+          }
+        });
+      } catch (e) {
+        console.error('Parse error:', e);
+      }
+    };
+
+    this.eventSource.onerror = () => {
+      console.error('EventSource error'); // Debug
+      this.eventSource?.close();
+      this.isLoading.set(false);
+    };
   }
 
   selectDate(date: string): void {

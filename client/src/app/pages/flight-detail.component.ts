@@ -192,7 +192,7 @@ export class FlightDetailPageComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/results']);
+    window.history.back();
   }
 
   bookFlight(): void {

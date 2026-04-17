@@ -1,5 +1,5 @@
-import { Injectable, signal, computed } from '@angular/core';
-import type { SearchParams, FilterState } from '../types/flight';
+import { Injectable, signal } from '@angular/core';
+import type { SearchParams, FilterState, FlightResult } from '../types/flight';
 
 export const DEFAULT_FILTER_STATE: FilterState = {
   priceRange: [0, 10000],
@@ -13,14 +13,25 @@ export const DEFAULT_FILTER_STATE: FilterState = {
 
 @Injectable({ providedIn: 'root' })
 export class SearchStore {
-  // Search params
   readonly searchParams = signal<SearchParams | null>(null);
-
-  // Filter state
   readonly filterState = signal<FilterState>({ ...DEFAULT_FILTER_STATE });
+
+  // Cache dei risultati — evita di rifare la chiamata API quando si torna dalla pagina dettaglio
+  readonly cachedResults = signal<FlightResult[]>([]);
+  readonly cachedSearchKey = signal<string>(''); // chiave per invalidare la cache
 
   setSearchParams(params: SearchParams): void {
     this.searchParams.set(params);
+  }
+
+  setResults(results: FlightResult[], searchKey: string): void {
+    this.cachedResults.set(results);
+    this.cachedSearchKey.set(searchKey);
+  }
+
+  clearResults(): void {
+    this.cachedResults.set([]);
+    this.cachedSearchKey.set('');
   }
 
   swapOriginDestination(): void {
@@ -38,7 +49,14 @@ export class SearchStore {
   }
 
   resetFilters(): void {
-    this.filterState.set({ ...DEFAULT_FILTER_STATE });
+    const results = this.cachedResults();
+    if (results.length > 0) {
+      const min = Math.floor(Math.min(...results.map((r) => parseFloat(r.price.grandTotal))));
+      const max = Math.ceil(Math.max(...results.map((r) => parseFloat(r.price.grandTotal))));
+      this.filterState.set({ ...DEFAULT_FILTER_STATE, priceRange: [min, max] });
+    } else {
+      this.filterState.set({ ...DEFAULT_FILTER_STATE });
+    }
   }
 
   syncPriceRange(min: number, max: number): void {

@@ -162,9 +162,9 @@ export class SearchFormComponent implements OnInit {
   ];
 
   form = this.fb.group({
-    origin: ['', Validators.required],
-    destination: ['', Validators.required],
-    departureDate: ['', Validators.required],
+    origin: ['MXP', Validators.required],
+    destination: ['FCO', Validators.required],
+    departureDate: [new Date().toISOString().split('T')[0], Validators.required],
     returnDate: [''],
     tripType: ['one-way'],
     adults: [1, [Validators.required, Validators.min(1)]],
