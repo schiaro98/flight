@@ -13,7 +13,7 @@ import { parseDurationToMinutes } from '../../utils/filter-utils';
     <aside class="w-full bg-white rounded-xl shadow-sm border border-gray-100 p-4 space-y-6">
       <!-- Sort -->
       <div>
-        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Ordina per</label>
+        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Sort by</label>
         <select [ngModel]="sortValue()" (ngModelChange)="onSortChange($event)"
           class="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400">
           @for (opt of sortOptions; track opt.value) {
@@ -25,7 +25,7 @@ import { parseDurationToMinutes } from '../../utils/filter-utils';
 
       <!-- Price -->
       <div>
-        <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Prezzo</h3>
+        <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Price</h3>
         <div class="flex justify-between text-sm text-gray-600 mb-2">
           <span>{{ formatPrice(filterState().priceRange[0]) }}</span>
           <span>{{ formatPrice(filterState().priceRange[1]) }}</span>
@@ -39,7 +39,7 @@ import { parseDurationToMinutes } from '../../utils/filter-utils';
 
       <!-- Stops -->
       <div>
-        <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Scali</h3>
+        <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Stops</h3>
         @for (opt of stopOptions; track opt.value) {
           <label class="flex items-center gap-2 mb-1 cursor-pointer">
             <input type="checkbox"
@@ -55,7 +55,7 @@ import { parseDurationToMinutes } from '../../utils/filter-utils';
       <!-- Airlines -->
       @if (availableAirlines().length > 0) {
         <div>
-          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Compagnie aeree</h3>
+          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Airlines</h3>
           @for (airline of availableAirlines(); track airline) {
             <label class="flex items-center gap-2 mb-1 cursor-pointer">
               <input type="checkbox"
@@ -71,7 +71,7 @@ import { parseDurationToMinutes } from '../../utils/filter-utils';
 
       <!-- Departure time -->
       <div>
-        <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Orario di partenza</h3>
+        <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Departure time</h3>
         @for (slot of timeSlots; track slot.value) {
           <label class="flex items-center gap-2 mb-1 cursor-pointer">
             <input type="checkbox"
@@ -87,7 +87,7 @@ import { parseDurationToMinutes } from '../../utils/filter-utils';
       <!-- Duration -->
       <div>
         <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
-          Durata massima: {{ filterState().maxDurationHours ?? maxDuration() }}h
+          Max duration: {{ filterState().maxDurationHours ?? maxDuration() }}h
         </h3>
         <input type="range" [min]="1" [max]="maxDuration()"
           [ngModel]="filterState().maxDurationHours ?? maxDuration()"
@@ -98,7 +98,7 @@ import { parseDurationToMinutes } from '../../utils/filter-utils';
 
       <button type="button" (click)="store.resetFilters()"
         class="w-full rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
-        Reimposta filtri
+        Reset filters
       </button>
     </aside>
   `,
@@ -111,27 +111,27 @@ export class FilterPanelComponent {
   filterState = this.store.filterState;
 
   sortOptions = [
-    { value: 'price:asc', label: 'Prezzo (crescente)' },
-    { value: 'price:desc', label: 'Prezzo (decrescente)' },
-    { value: 'duration:asc', label: 'Durata (crescente)' },
-    { value: 'duration:desc', label: 'Durata (decrescente)' },
-    { value: 'departure:asc', label: 'Partenza (prima)' },
-    { value: 'departure:desc', label: 'Partenza (dopo)' },
-    { value: 'arrival:asc', label: 'Arrivo (prima)' },
-    { value: 'arrival:desc', label: 'Arrivo (dopo)' },
+    { value: 'price:asc', label: 'Price (low to high)' },
+    { value: 'price:desc', label: 'Price (high to low)' },
+    { value: 'duration:asc', label: 'Duration (shortest)' },
+    { value: 'duration:desc', label: 'Duration (longest)' },
+    { value: 'departure:asc', label: 'Departure (earliest)' },
+    { value: 'departure:desc', label: 'Departure (latest)' },
+    { value: 'arrival:asc', label: 'Arrival (earliest)' },
+    { value: 'arrival:desc', label: 'Arrival (latest)' },
   ];
 
   stopOptions = [
-    { value: 'direct' as const, label: 'Diretto' },
-    { value: '1-stop' as const, label: '1 scalo' },
-    { value: '2+' as const, label: '2+ scali' },
+    { value: 'direct' as const, label: 'Direct' },
+    { value: '1-stop' as const, label: '1 stop' },
+    { value: '2+' as const, label: '2+ stops' },
   ];
 
   timeSlots = [
-    { value: 'morning' as const, label: 'Mattina (06–12)' },
-    { value: 'afternoon' as const, label: 'Pomeriggio (12–18)' },
-    { value: 'evening' as const, label: 'Sera (18–24)' },
-    { value: 'night' as const, label: 'Notte (00–06)' },
+    { value: 'morning' as const, label: 'Morning (06–12)' },
+    { value: 'afternoon' as const, label: 'Afternoon (12–18)' },
+    { value: 'evening' as const, label: 'Evening (18–24)' },
+    { value: 'night' as const, label: 'Night (00–06)' },
   ];
 
   priceMin = computed(() => {

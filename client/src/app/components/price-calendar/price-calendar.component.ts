@@ -13,7 +13,7 @@ import type { SearchParams, PriceCalendarEntry } from '../../types/flight';
       @if (!isInitialized()) {
         <button (click)="initializeCalendar()"
           class="w-full py-3 px-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors">
-          📅 Carica calendario prezzi
+          📅 Load price calendar
         </button>
       } @else {
         <div class="flex items-center justify-between mb-4">
@@ -72,7 +72,7 @@ import type { SearchParams, PriceCalendarEntry } from '../../types/flight';
         </div>
 
         <p class="mt-3 text-xs text-gray-400 text-center">
-          🟢 Prezzo più basso del mese
+          🟢 Lowest price of the month
         </p>
       }
     </div>

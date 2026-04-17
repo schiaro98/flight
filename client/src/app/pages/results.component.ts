@@ -31,7 +31,7 @@ import type { FlightResult } from '../types/flight';
         <div class="mb-4 md:hidden">
           <button type="button" (click)="filterOpen.set(!filterOpen())"
             class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">
-            {{ filterOpen() ? 'Hide Filters' : 'Show Filters' }}
+        {{ filterOpen() ? 'Hide Filters' : 'Show Filters' }}
           </button>
         </div>
 

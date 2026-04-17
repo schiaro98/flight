@@ -97,9 +97,6 @@ MIT — see [LICENSE](LICENSE).
 - [ ] Stato vuoto homepage prima di fare una ricerca
 - [ ] Messaggio "nessun risultato con i filtri attivi" con suggerimento di rimuovere i filtri
 
-### Qualità del mock
-- [ ] Arricchire `mockData.ts` con più voli realistici per testare meglio filtri e ordinamento
-
 ### Robustezza
 - [ ] Gestione back button del browser tra homepage e risultati
 - [ ] Gestione OAuth2 token refresh per Amadeus (se si vuole aggiungere come fonte alternativa)

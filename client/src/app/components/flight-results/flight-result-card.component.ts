@@ -102,7 +102,7 @@ export class FlightResultCardComponent {
   get stopsLabel(): string {
     const segs = this.result.itineraries[0]?.segments ?? [];
     const stops = segs.length - 1;
-    return stops === 0 ? 'Diretto' : `${stops} scalo${stops > 1 ? 'i' : ''}`;
+    return stops === 0 ? 'Direct' : `${stops} stop${stops > 1 ? 's' : ''}`;
   }
 
   get priceLabel(): string {
