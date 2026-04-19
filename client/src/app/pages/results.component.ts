@@ -10,7 +10,7 @@ import { PriceCalendarComponent } from '../components/price-calendar/price-calen
 import { deserializeSearchParams, serializeSearchParams } from '../utils/url-serializer';
 import {
   filterByPrice, filterByStops, filterByAirline,
-  filterByDepartureTime, filterByDuration, sortResults
+  filterByDepartureTime, filterByDuration, filterPastFlights, sortResults
 } from '../utils/filter-utils';
 import type { FlightResult } from '../types/flight';
 
@@ -45,7 +45,7 @@ import type { FlightResult } from '../types/flight';
                 (dateSelected)="onCalendarDateSelected($event)"
               />
             </div>
-            <app-filter-panel [results]="results()" />
+            <app-filter-panel [results]="activeResults()" />
           </aside>
 
           <!-- Results -->
@@ -72,9 +72,12 @@ export class ResultsComponent implements OnInit {
   errorMessage = signal('');
   filterOpen = signal(false);
 
+  activeResults = computed(() => filterPastFlights(this.results()));
+
   filteredResults = computed(() => {
     const fs = this.store.filterState();
-    let r = filterByPrice(this.results(), fs.priceRange);
+    let r = this.activeResults();
+    r = filterByPrice(r, fs.priceRange);
     r = filterByStops(r, fs.stops);
     r = filterByAirline(r, fs.airlines);
     r = filterByDepartureTime(r, fs.departureTimeSlots);

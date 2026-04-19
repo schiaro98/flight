@@ -81,6 +81,36 @@ cd client && npm run build
 cd server && npm run build && npm start
 ```
 
+## Updating dependencies
+
+### Client (Angular)
+
+Angular packages must all be on the same version. Use `ng update` for a coordinated upgrade:
+
+```bash
+cd client
+
+# Check what can be updated
+npx ng update
+
+# Update Angular core + CLI (updates all @angular/* together)
+npx ng update @angular/core @angular/cli
+```
+
+For non-Angular packages:
+
+```bash
+cd client && npx npm-check-updates --reject '@angular/*' -u && npm install --legacy-peer-deps
+```
+
+### Server
+
+```bash
+cd server && npx npm-check-updates -u && npm install
+```
+
+> After upgrading, test the app locally before committing.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
@@ -89,13 +119,11 @@ MIT — see [LICENSE](LICENSE).
 
 ## Roadmap / TODO
 
-### Nuove funzionalità
-- [ ] Ricerca per paese come origine/destinazione (es. "Italy" → tutti gli aeroporti italiani)
-- [ ] Destinazione "Ovunque" — mostra le migliori offerte verso qualsiasi destinazione
-- [ ] Ricerca date flessibili / date prossime (±3/7 giorni rispetto alla data selezionata)
-- [ ] Collegare il PriceCalendar alla pagina risultati (già implementato ma non integrato)
-- [ ] Stato vuoto homepage prima di fare una ricerca
-- [ ] Messaggio "nessun risultato con i filtri attivi" con suggerimento di rimuovere i filtri
+### New features
+- [ ] Search by country as origin/destination (e.g. "Italy" → all Italian airports)
+- [ ] "Anywhere" destination — show best deals to any destination
+- [ ] Flexible date search (±3/7 days from selected date)
+- [x] Hide flights with departure time in the past (already-departed flights on today's searches)
 
 ### Robustezza
 - [ ] Gestione back button del browser tra homepage e risultati

@@ -25,6 +25,16 @@ function returnDateValidator(control: AbstractControl): ValidationErrors | null 
   return null;
 }
 
+function maxPassengersValidator(control: AbstractControl): ValidationErrors | null {
+  const adults = control.get('adults')?.value ?? 0;
+  const children = control.get('children')?.value ?? 0;
+  const infants = control.get('infants')?.value ?? 0;
+  if (adults + children + infants > 9) {
+    return { tooManyPassengers: true };
+  }
+  return null;
+}
+
 @Component({
   selector: 'app-search-form',
   standalone: true,
@@ -74,6 +84,9 @@ function returnDateValidator(control: AbstractControl): ValidationErrors | null 
       </div>
       @if (form.errors?.['sameAirport'] && form.touched) {
         <p class="text-sm text-red-600">Origin and destination must be different</p>
+      }
+      @if (form.errors?.['tooManyPassengers']) {
+        <p class="text-sm text-red-600">Total passengers cannot exceed 9</p>
       }
 
       <!-- Dates -->
@@ -171,7 +184,7 @@ export class SearchFormComponent implements OnInit {
     children: [0, Validators.min(0)],
     infants: [0, Validators.min(0)],
     cabinClass: ['ECONOMY'],
-  }, { validators: [originDestinationValidator, returnDateValidator] });
+  }, { validators: [originDestinationValidator, returnDateValidator, maxPassengersValidator] });
 
   ngOnInit(): void {
     const params = this.store.searchParams();

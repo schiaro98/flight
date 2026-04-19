@@ -15,6 +15,7 @@ export const DEFAULT_FILTER_STATE: FilterState = {
 export class SearchStore {
   readonly searchParams = signal<SearchParams | null>(null);
   readonly filterState = signal<FilterState>({ ...DEFAULT_FILTER_STATE });
+  readonly priceMax = signal<number>(10000);
 
   // Cache dei risultati — evita di rifare la chiamata API quando si torna dalla pagina dettaglio
   readonly cachedResults = signal<FlightResult[]>([]);
@@ -27,6 +28,11 @@ export class SearchStore {
   setResults(results: FlightResult[], searchKey: string): void {
     this.cachedResults.set(results);
     this.cachedSearchKey.set(searchKey);
+    if (results.length > 0) {
+      const max = Math.ceil(Math.max(...results.map((r) => parseFloat(r.price.grandTotal))));
+      this.priceMax.set(max);
+      this.syncPriceRange(0, max);
+    }
   }
 
   clearResults(): void {
@@ -49,14 +55,7 @@ export class SearchStore {
   }
 
   resetFilters(): void {
-    const results = this.cachedResults();
-    if (results.length > 0) {
-      const min = Math.floor(Math.min(...results.map((r) => parseFloat(r.price.grandTotal))));
-      const max = Math.ceil(Math.max(...results.map((r) => parseFloat(r.price.grandTotal))));
-      this.filterState.set({ ...DEFAULT_FILTER_STATE, priceRange: [min, max] });
-    } else {
-      this.filterState.set({ ...DEFAULT_FILTER_STATE });
-    }
+    this.filterState.set({ ...DEFAULT_FILTER_STATE, priceRange: [0, this.priceMax()] });
   }
 
   syncPriceRange(min: number, max: number): void {

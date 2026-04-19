@@ -63,6 +63,11 @@ router.get('/', async (req: Request, res: Response) => {
   const childrenCount = parseInt(children ?? '0', 10);
   const infantsCount = parseInt(infants ?? '0', 10);
 
+  if (adultsCount + childrenCount + infantsCount > 9) {
+    res.status(400).json({ error: 'Total passengers cannot exceed 9.' });
+    return;
+  }
+
   // Build passengers array for Duffel v4
   // Adults: { type: 'adult' }, children/infants: { age: number } only
   const passengers = [

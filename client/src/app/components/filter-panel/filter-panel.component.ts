@@ -1,9 +1,10 @@
-import { Component, Input, inject, computed, effect } from '@angular/core';
+import { Component, Input, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import type { FlightResult } from '../../types/flight';
 import { SearchStore } from '../../store/search.store';
 import { parseDurationToMinutes } from '../../utils/filter-utils';
+import { getAirlineName } from '../../utils/airline-names';
 
 @Component({
   selector: 'app-filter-panel',
@@ -30,9 +31,9 @@ import { parseDurationToMinutes } from '../../utils/filter-utils';
           <span>{{ formatPrice(filterState().priceRange[0]) }}</span>
           <span>{{ formatPrice(filterState().priceRange[1]) }}</span>
         </div>
-        <input type="range" [min]="priceMin()" [max]="priceMax()"
+        <input type="range" [min]="0" [max]="store.priceMax()"
           [ngModel]="filterState().priceRange[1]"
-          (ngModelChange)="store.setFilter('priceRange', [filterState().priceRange[0], $event])"
+          (ngModelChange)="store.setFilter('priceRange', [0, $event])"
           class="w-full accent-blue-600" />
       </div>
       <hr class="border-gray-100" />
@@ -62,7 +63,7 @@ import { parseDurationToMinutes } from '../../utils/filter-utils';
                 [checked]="filterState().airlines.includes(airline)"
                 (change)="toggleAirline(airline)"
                 class="accent-blue-600" />
-              <span class="text-sm text-gray-700">{{ airline }}</span>
+              <span class="text-sm text-gray-700">{{ getAirlineName(airline) }}</span>
             </label>
           }
         </div>
@@ -104,11 +105,12 @@ import { parseDurationToMinutes } from '../../utils/filter-utils';
   `,
 })
 export class FilterPanelComponent {
-  @Input() set results(val: FlightResult[]) { this._results = val; this.syncPriceRange(); }
-  private _results: FlightResult[] = [];
+  private _results = signal<FlightResult[]>([]);
+  @Input() set results(val: FlightResult[]) { this._results.set(val); }
 
   store = inject(SearchStore);
   filterState = this.store.filterState;
+  getAirlineName = getAirlineName;
 
   sortOptions = [
     { value: 'price:asc', label: 'Price (low to high)' },
@@ -134,19 +136,9 @@ export class FilterPanelComponent {
     { value: 'night' as const, label: 'Night (00–06)' },
   ];
 
-  priceMin = computed(() => {
-    if (!this._results.length) return 0;
-    return Math.floor(Math.min(...this._results.map((r) => parseFloat(r.price.grandTotal))));
-  });
-
-  priceMax = computed(() => {
-    if (!this._results.length) return 10000;
-    return Math.ceil(Math.max(...this._results.map((r) => parseFloat(r.price.grandTotal))));
-  });
-
   maxDuration = computed(() => {
-    if (!this._results.length) return 24;
-    const durations = this._results.map((r) => {
+    if (!this._results().length) return 24;
+    const durations = this._results().map((r) => {
       const d = r.itineraries[0]?.duration ?? 'PT0M';
       return parseDurationToMinutes(d) / 60;
     });
@@ -155,17 +147,11 @@ export class FilterPanelComponent {
 
   availableAirlines = computed(() => {
     const codes = new Set<string>();
-    this._results.forEach((r) => r.validatingAirlineCodes.forEach((c) => codes.add(c)));
+    this._results().forEach((r) => r.validatingAirlineCodes.forEach((c) => codes.add(c)));
     return Array.from(codes).sort();
   });
 
   sortValue = computed(() => `${this.filterState().sortBy}:${this.filterState().sortOrder}`);
-
-  private syncPriceRange(): void {
-    if (this._results.length > 0) {
-      this.store.syncPriceRange(this.priceMin(), this.priceMax());
-    }
-  }
 
   onSortChange(value: string): void {
     const [sortBy, sortOrder] = value.split(':') as ['price' | 'duration' | 'departure' | 'arrival', 'asc' | 'desc'];
