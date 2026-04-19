@@ -19,6 +19,14 @@ function getTimeSlot(at: string): 'morning' | 'afternoon' | 'evening' | 'night' 
   return 'night';
 }
 
+export function filterPastFlights(results: FlightResult[]): FlightResult[] {
+  const now = new Date();
+  return results.filter((r) => {
+    const dep = r.itineraries[0]?.segments[0]?.departure.at;
+    return dep ? new Date(dep) > now : true;
+  });
+}
+
 export function filterByPrice(results: FlightResult[], range: [number, number]): FlightResult[] {
   const [min, max] = range;
   return results.filter((r) => {
