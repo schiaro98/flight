@@ -120,14 +120,11 @@ MIT — see [LICENSE](LICENSE).
 ## Roadmap / TODO
 
 ### New features
-- [ ] Search by country as origin/destination (e.g. "Italy" → all Italian airports)
-- [ ] "Anywhere" destination — show best deals to any destination
+- [ ] Flexible destination search — search by country (e.g. "Italy" → top airports) or "Anywhere" (popular destinations worldwide), streaming results via SSE as they arrive
 - [ ] Flexible date search (±3/7 days from selected date)
-- [x] Hide flights with departure time in the past (already-departed flights on today's searches)
 
 ### Robustezza
 - [ ] Gestione back button del browser tra homepage e risultati
-- [ ] Gestione OAuth2 token refresh per Amadeus (se si vuole aggiungere come fonte alternativa)
 
 ### CI/CD
 - [ ] Fixare il deploy automatico Vercel via GitHub Actions (path `client/client` issue)

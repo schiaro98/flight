@@ -244,7 +244,7 @@ export class SearchFormComponent implements OnInit {
 
     this.store.setSearchParams(params);
     const qs = serializeSearchParams(params).toString();
-    this.router.navigate(['/results'], { queryParamsHandling: 'merge' }).then(() => {
+    this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
       this.router.navigateByUrl(`/results?${qs}`);
     });
   }
