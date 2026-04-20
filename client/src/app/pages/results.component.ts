@@ -38,13 +38,6 @@ import type { FlightResult } from '../types/flight';
         <div class="flex flex-col gap-6 md:flex-row md:items-start">
           <!-- Sidebar -->
           <aside class="w-full md:w-72 md:shrink-0" [class.hidden]="!filterOpen()" [class.md:block]="true">
-            <div class="mb-4">
-              <app-price-calendar
-                [searchParams]="store.searchParams()"
-                [selectedDate]="store.searchParams()?.departureDate ?? ''"
-                (dateSelected)="onCalendarDateSelected($event)"
-              />
-            </div>
             <app-filter-panel [results]="activeResults()" />
           </aside>
 
