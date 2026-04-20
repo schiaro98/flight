@@ -1,6 +1,6 @@
 # ✈️ Flight Search App
 
-A single-page application for searching flights, filtering results, and browsing a price calendar — built with Angular 18, TypeScript, and the Duffel API.
+A single-page application for searching flights and filtering results — built with Angular, TypeScript, and the Duffel API.
 
 ## Features
 
@@ -14,30 +14,30 @@ A single-page application for searching flights, filtering results, and browsing
 
 | Layer | Library |
 |---|---|
-| Frontend | Angular 18 (standalone components, signals) |
+| Frontend | Angular (standalone components, signals) |
 | Routing | Angular Router |
 | State | Angular Signals |
 | HTTP | Angular HttpClient + RxJS |
 | Styling | Tailwind CSS |
 | Forms | Angular Reactive Forms |
-| Backend | Node.js + Express + TypeScript |
+| API | Vercel Functions (serverless) |
 | Flight data | Duffel API |
+| Hosting | Vercel |
 
 ## Project Structure
 
 ```
 /
-├── client/             ← Angular frontend (porta 4200)
+├── client/
+│   ├── api/            ← Vercel serverless functions
+│   │   └── flights.ts  ← GET /api/flights → Duffel
 │   └── src/app/
 │       ├── components/ ← SearchForm, FlightResults, FilterPanel
 │       ├── pages/      ← HomeComponent, ResultsComponent
 │       ├── services/   ← FlightService, AirportService
 │       ├── store/      ← SearchStore (signals)
 │       └── utils/      ← filter-utils, url-serializer
-└── server/             ← Express backend (porta 3001)
-    └── src/
-        ├── routes/     ← /api/flights → Duffel
-        └── index.ts
+└── server/             ← Legacy Express server (not used in production)
 ```
 
 ## Getting Started
@@ -46,40 +46,49 @@ A single-page application for searching flights, filtering results, and browsing
 
 - Node.js ≥ 22 (LTS)
 - npm ≥ 9
+- Vercel CLI (`npm i -g vercel`)
 
 ### Install
 
 ```bash
-# Backend
-cd server && npm install
-
-# Frontend
 cd client && npm install
 ```
 
 ### Run in development
 
 ```bash
-# Terminale 1 — backend (porta 3001)
-cd server && npm run dev
-
-# Terminale 2 — frontend (porta 4200)
-cd client && npm start
+cd client && npx vercel dev
 ```
 
-### Ottenere la Duffel API key
+This starts the Angular app and the serverless API functions together on `http://localhost:3000`, simulating the Vercel environment locally.
 
-1. Registrati su [app.duffel.com](https://app.duffel.com)
-2. Vai su **Developers → Access tokens**
-3. Crea un token di test (`duffel_test_...`)
-4. Crea `server/.env` (vedi `server/.env.example`) e aggiungi `DUFFEL_API_KEY`
+### Environment variables
 
-### Build per produzione
+Create `client/.env.local`:
+
+```
+DUFFEL_API_KEY=duffel_test_...
+```
+
+Get your key from [app.duffel.com](https://app.duffel.com) → **Developers → Access tokens**.
+
+### Build
 
 ```bash
 cd client && npm run build
-cd server && npm run build && npm start
 ```
+
+## Deployment
+
+The app deploys automatically to Vercel on every push to `main` via GitHub Actions.
+
+Make sure the following are set in your Vercel project (**Settings → Environment Variables**):
+- `DUFFEL_API_KEY`
+
+And in GitHub (**Settings → Secrets → Actions**):
+- `VERCEL_TOKEN`
+- `VERCEL_ORG_ID`
+- `VERCEL_PROJECT_ID`
 
 ## Updating dependencies
 
@@ -103,14 +112,6 @@ For non-Angular packages:
 cd client && npx npm-check-updates --reject '@angular/*' -u && npm install --legacy-peer-deps
 ```
 
-### Server
-
-```bash
-cd server && npx npm-check-updates -u && npm install
-```
-
-> After upgrading, test the app locally before committing.
-
 ## License
 
 MIT — see [LICENSE](LICENSE).
@@ -120,13 +121,9 @@ MIT — see [LICENSE](LICENSE).
 ## Roadmap / TODO
 
 ### New features
-- [ ] Flexible destination search — search by country (e.g. "Italy" → top airports) or "Anywhere" (popular destinations worldwide), streaming results via SSE as they arrive
+- [ ] Flexible destination search — search by country (e.g. "Italy" → top airports) or "Anywhere" (popular destinations worldwide)
 - [ ] Flexible date search (±3/7 days from selected date)
+- [ ] Price calendar (disabled — SSE not supported on Vercel Functions free tier)
 
-### Robustezza
-- [ ] Gestione back button del browser tra homepage e risultati
-
-### CI/CD
-- [ ] Fixare il deploy automatico Vercel via GitHub Actions (path `client/client` issue)
-- [ ] Fixare il deploy automatico Railway via GitHub Actions (token scaduto)
-
+### Robustness
+- [ ] Handle browser back button between home and results
