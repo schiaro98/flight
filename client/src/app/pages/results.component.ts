@@ -117,6 +117,7 @@ export class ResultsComponent implements OnInit {
         error: (err: Error) => {
           this.isLoading.set(false);
           this.errorMessage.set(err.message);
+          this.store.clearResults(); // Invalida la cache così la prossima ricerca riparte
         },
       });
     });

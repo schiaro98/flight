@@ -5,7 +5,7 @@ import { catchError, timeout } from 'rxjs/operators';
 import type { SearchParams, FlightResult } from '../types/flight';
 import { environment } from '../../environments/environment';
 
-const TIMEOUT_MS = 10000;
+const TIMEOUT_MS = 30000;
 
 export interface FlightServiceError {
   error: string;
